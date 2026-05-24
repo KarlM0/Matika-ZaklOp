@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matika – Základní operace</title>
+  <meta name="description" content="Procvičování základních početních operací: sčítání, odčítání, násobení a dělení.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fdf6e9;
+      --ink: #2b2522;
+      --muted: #6f655c;
+      --accent: #e8642c;
+      --accent-soft: #ffe2cf;
+      --card: #ffffff;
+      --line: #e7dcc8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* floating math symbols in the background */
+    .symbol {
+      position: fixed;
+      font-family: 'Fraunces', serif;
+      font-weight: 800;
+      color: var(--accent);
+      opacity: 0.10;
+      user-select: none;
+      pointer-events: none;
+    }
+    .s1 { top: 8%;  left: 7%;  font-size: 9rem; transform: rotate(-12deg); }
+    .s2 { top: 65%; left: 4%;  font-size: 6rem; transform: rotate(10deg); }
+    .s3 { top: 14%; right: 9%; font-size: 7rem; transform: rotate(14deg); }
+    .s4 { bottom: 9%; right: 6%; font-size: 11rem; transform: rotate(-8deg); }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 3rem 2.75rem;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: 0 24px 50px -28px rgba(43, 37, 34, 0.35);
+      position: relative;
+      z-index: 1;
+      animation: rise 0.6s ease both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      font-family: 'Fraunces', serif;
+      font-weight: 800;
+      font-size: clamp(2.1rem, 6vw, 2.9rem);
+      line-height: 1.1;
+      margin-bottom: 0.85rem;
+    }
+
+    h1 .op { color: var(--accent); }
+
+    .lead {
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.6;
+      margin-bottom: 1.75rem;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.7rem 0.85rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .feature .op {
+      font-family: 'Fraunces', serif;
+      font-weight: 800;
+      color: var(--accent);
+      font-size: 1.25rem;
+      width: 1.4rem;
+      text-align: center;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 0.95rem 1.9rem;
+      border-radius: 14px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 10px 22px -10px rgba(232, 100, 44, 0.7);
+    }
+
+    .cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 28px -12px rgba(232, 100, 44, 0.8);
+    }
+
+    .cta:active { transform: translateY(0); }
+
+    .arrow { transition: transform 0.15s ease; }
+    .cta:hover .arrow { transform: translateX(4px); }
+
+    footer {
+      margin-top: 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+      z-index: 1;
+    }
+
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <span class="symbol s1">+</span>
+  <span class="symbol s2">&minus;</span>
+  <span class="symbol s3">&times;</span>
+  <span class="symbol s4">&divide;</span>
+
+  <main class="card">
+    <span class="badge">Procvičování matematiky</span>
+    <h1>Matika &mdash; <span class="op">Základní&nbsp;operace</span></h1>
+    <p class="lead">
+      Jednoduchá aplikace pro procvičování základních početních operací.
+      Generuje příklady, vyhodnocuje odpovědi a pomáhá zlepšit rychlost
+      i přesnost počítání &mdash; přímo v prohlížeči, bez instalace.
+    </p>
+
+    <div class="features">
+      <div class="feature"><span class="op">+</span> Sčítání</div>
+      <div class="feature"><span class="op">&minus;</span> Odčítání</div>
+      <div class="feature"><span class="op">&times;</span> Násobení</div>
+      <div class="feature"><span class="op">&divide;</span> Dělení</div>
+    </div>
+
+    <a class="cta" href="Matika-ZaklOp.html">
+      Spustit aplikaci
+      <span class="arrow">&rarr;</span>
+    </a>
+  </main>
+
+  <footer>
+    Hostováno na GitHub Pages &middot; <a href="Matika-ZaklOp.html">Matika-ZaklOp.html</a>
+  </footer>
+</body>
+</html>
