@@ -10,6 +10,25 @@ project aims to follow [Semantic Versioning](https://semver.org/).
 > development session; their dates reflect that session rather than separate
 > release dates.
 
+## [1.1.8] - 2026-05-25
+
+### Changed
+- minor UI changes
+
+## [1.1.7] - 2026-05-25
+
+### Changed
+- Pressing "Check answers" on a set that is fully answered and entirely
+  correct now re-opens the Settings card, ready for configuring the next set.
+
+## [1.1.6] - 2026-05-25
+
+### Changed
+- A successful "Generate equations" now also collapses the Settings card so
+  the equations become the focus. A generation that produces nothing — no
+  operation selected, or an impossible settings combination — leaves Settings
+  open.
+
 ## [1.1.5] - 2026-05-23
 
 ### Changed
