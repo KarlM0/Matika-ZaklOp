@@ -16,6 +16,9 @@ equations for a child to solve, then checks the answers and reports a score.
   non-negative subtraction, and standard operator precedence.
 - Per-equation marking and an overall percentage score, with progress bars for
   completion and accuracy.
+- The Settings panel is collapsible: it folds away automatically once a set of
+  equations is generated, and re-opens when a checked set is fully answered and
+  entirely correct — keeping the focus on the equations while practising.
 - Bilingual interface — Czech (default) and English. Czech uses a comma as the
   decimal separator.
 - Dark, minimalist design.
@@ -37,7 +40,7 @@ desktop, laptop, tablet or phone — fully offline.
 
 ## Versioning
 
-See [CHANGELOG.md](CHANGELOG.md) for the full
+Current version: **1.1.8**. See [CHANGELOG.md](CHANGELOG.md) for the full
 history of changes.
 
 ## Known limitation
