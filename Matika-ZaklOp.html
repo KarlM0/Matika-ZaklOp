@@ -2,7 +2,7 @@
 <!--
   Math Practice — an arithmetic practice app for kids
   ============================================================
-  Version: 1.1.5
+  Version: 1.1.7
   NOTE: bump this version (and the VERSION constant in the
   <script> below) on every new iteration in this conversation.
   ============================================================
@@ -177,8 +177,8 @@
   .eq .ans.ok{border-color:var(--ok);color:var(--ok);}
   .eq .ans.bad{border-color:var(--bad);color:var(--bad);}
   .eq .mark{
-    width:32px;flex-shrink:0;text-align:center;
-    font-size:23px;line-height:1;
+    min-width:32px;flex-shrink:0;text-align:center;
+    font-size:23px;line-height:1;white-space:nowrap;
   }
   .eq .correct{
     flex-basis:100%;padding-left:34px;margin-top:1px;
@@ -305,7 +305,7 @@
 "use strict";
 
 /* === app version ====================================================== */
-const VERSION = "1.1.5";   // bump on every new iteration in this conversation
+const VERSION = "1.1.7";   // bump on every new iteration in this conversation
 
 /* ========================================================================
    STATE & PERSISTENCE
@@ -390,6 +390,38 @@ const CHEV = '<svg class="chev" viewBox="0 0 16 16"><path d="M4 6 L8 10 L12 6" s
      unanswered-> upside-down face
    ======================================================================== */
 const FACE_EMOJI = { ok:"\uD83E\uDD29", bad:"\uD83E\uDD14", empty:"\uD83D\uDE43" };
+
+/* ========================================================================
+   EASTER EGGS  --  hidden bonus emoji appended to a CORRECT answer's face.
+   There is no setting for these. Each rule is independent and tested on its
+   own, so a single result could in principle trigger more than one.
+
+     - any result whose digits contain three consecutive sixes
+         (666, 66.6, 196668, -16668, -1256.66, ...)   -> devilish set
+     - the result is exactly 13                       -> lucky charms
+     - the result is exactly 42                       -> milky way
+     - the result is exactly 67                       -> fireworks set
+
+   The "666" test runs on the rendered result with the sign and decimal
+   separator stripped out, so the three sixes only have to be consecutive
+   among the digits themselves. 13, 42 and 67 are matched on the exact
+   numeric value (eq.answer is in integer "ticks", so the value is
+   ticks/scale).
+   ======================================================================== */
+const EGG_666 = "\uD83D\uDE08\uD83D\uDC79\uD83E\uDD18\uD83E\uDDDB"; /* devil, ogre, horns, vampire */
+const EGG_13  = "\uD83C\uDF40\uD83D\uDC1E";                         /* four leaf clover, lady beetle */
+const EGG_42  = "\uD83C\uDF0C";                                     /* milky way */
+const EGG_67  = "\uD83C\uDF87\uD83C\uDF08\uD83E\uDD2A";             /* fireworks, rainbow, zany face */
+
+function eggEmoji(eq){
+  let extra = "";
+  const digits = fmt(eq.answer).replace(/\D/g, "");   /* drop sign + decimal separator */
+  if(digits.indexOf("666") !== -1) extra += EGG_666;
+  if(eq.answer === 13 * scale)     extra += EGG_13;
+  if(eq.answer === 42 * scale)     extra += EGG_42;
+  if(eq.answer === 67 * scale)     extra += EGG_67;
+  return extra;
+}
 
 /* ========================================================================
    NUMBER HELPERS  (all generation is done in integer "ticks")
@@ -627,6 +659,15 @@ function generate(){
     if(eq) equations.push(eq);
   }
   renderBoard();
+
+  /* after a successful generation, fold the Settings card away so the
+     equations become the focus; a generation that produced nothing leaves
+     it open so the settings can be fixed */
+  if(equations.length > 0){
+    S.settingsCollapsed = true;
+    saveSettings();
+    applyCollapse();
+  }
 }
 
 function renderBoard(){
@@ -673,6 +714,8 @@ function gradeRow(i){
   else if(status === "bad") input.classList.add("bad");
 
   mark.textContent = FACE_EMOJI[status];
+  /* hidden easter-egg bonus emoji, appended only to a correct answer */
+  if(status === "ok") mark.textContent += eggEmoji(eq);
   /* worked solution (with intermediate step) is shown for every completed
      answer -- correct and incorrect alike -- but never for blank ones */
   corr.textContent = (status !== "empty" && S.showCorrect) ? workedSolution(eq) : "";
@@ -703,6 +746,14 @@ function updateScore(){
   const completePct = total ? (filled/total*100) : 0;
   const okPct  = filled ? (correct/filled*100) : 0;
   const badPct = filled ? (incorrect/filled*100) : 0;
+
+  /* a flawless, fully-answered set re-opens Settings so the next set can be
+     configured straight away -- the mirror of generate() folding it shut */
+  if(total > 0 && missing === 0 && correct === total){
+    S.settingsCollapsed = false;
+    saveSettings();
+    applyCollapse();
+  }
 
   let detail = correct+" / "+filled+" "+tr("correct");
   if(missing > 0) detail += "  \u00b7  "+missing+" "+tr("missing");
