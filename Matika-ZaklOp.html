@@ -2,7 +2,7 @@
 <!--
   Math Practice — an arithmetic practice app for kids
   ============================================================
-  Version: 1.1.8
+  Version: 1.1.9
   NOTE: bump this version (and the VERSION constant in the
   <script> below) on every new iteration in this conversation.
   ============================================================
@@ -197,11 +197,17 @@
   .pbar > div{height:100%;transition:width .35s ease;}
   .score .pbar.top{margin-bottom:15px;}
   .score .pbar.bottom{margin-top:15px;}
+  .score-row{display:flex;align-items:stretch;}
+  .score-half{flex:1;text-align:center;padding:0 12px;}
+  .score-half + .score-half{border-left:1px solid var(--border-soft);}
 
   @media(max-width:560px){
     .grid{grid-template-columns:1fr;}
     .ops{grid-template-columns:repeat(2,1fr);}
     h1{font-size:25px;}
+    .score-row{flex-direction:column;gap:14px;}
+    .score-half{padding:0;}
+    .score-half + .score-half{border-left:none;}
   }
 </style>
 </head>
@@ -305,7 +311,7 @@
 "use strict";
 
 /* === app version ====================================================== */
-const VERSION = "1.1.8";   // bump on every new iteration in this conversation
+const VERSION = "1.1.9";   // bump on every new iteration in this conversation
 
 /* ========================================================================
    STATE & PERSISTENCE
@@ -358,7 +364,8 @@ const T = {
     empty:"Choose your settings and generate a set of equations.",
     warn:"These settings only allowed {n} of {total} equations. Try widening the number range, allowing more operations, or using fewer terms.",
     warnNone:"These settings can't produce valid equations. Try widening the number range, allowing more operations, or using fewer terms.",
-    correct:"correct", missing:"unanswered", noOps:"Select at least one operation."
+    correct:"correct", missing:"unanswered", noOps:"Select at least one operation.",
+    time:"Time"
   },
   cs:{
     title:"Procvi\u010dov\u00e1n\u00ed po\u010d\u00edt\u00e1n\u00ed",
@@ -375,7 +382,8 @@ const T = {
     empty:"Zvol nastaven\u00ed a vytvo\u0159 sadu p\u0159\u00edklad\u016f.",
     warn:"Toto nastaven\u00ed umo\u017enilo vytvo\u0159it jen {n} z {total} p\u0159\u00edklad\u016f. Zkus roz\u0161\u00ed\u0159it rozsah \u010d\u00edsel, povolit v\u00edce operac\u00ed nebo zmen\u0161it po\u010det \u010dlen\u016f.",
     warnNone:"S t\u00edmto nastaven\u00edm nelze vytvo\u0159it p\u0159\u00edklady. Zkus roz\u0161\u00ed\u0159it rozsah \u010d\u00edsel, povolit v\u00edce operac\u00ed nebo zmen\u0161it po\u010det \u010dlen\u016f.",
-    correct:"spr\u00e1vn\u011b", missing:"nevypln\u011bno", noOps:"Vyber alespo\u0148 jednu operaci."
+    correct:"spr\u00e1vn\u011b", missing:"nevypln\u011bno", noOps:"Vyber alespo\u0148 jednu operaci.",
+    time:"\u010cas"
   }
 };
 function tr(k){ return (T[S.lang]||T.en)[k]; }
@@ -656,6 +664,13 @@ function generateOne(leaves, ops, opMinT, opMaxT, resMinT, resMaxT, wantBrackets
    ======================================================================== */
 let equations = [];
 
+/* stopwatch (hidden variant): runtime-only state, not persisted. timerStart
+   is set when a set is generated; timerFinal holds the elapsed milliseconds
+   once the set has been checked fully correct, and then stays fixed until the
+   next set is generated. */
+let timerStart = null;
+let timerFinal = null;
+
 function readInputsToState(){
   S.opMin = parseInt(document.getElementById("opMin").value,10);
   S.opMax = parseInt(document.getElementById("opMax").value,10);
@@ -703,9 +718,15 @@ function generate(){
      equations become the focus; a generation that produced nothing leaves
      it open so the settings can be fixed */
   if(equations.length > 0){
+    /* stopwatch: a new set (re)starts the timer and clears any final time */
+    timerStart = Date.now();
+    timerFinal = null;
     S.settingsCollapsed = true;
     saveSettings();
     applyCollapse();
+  } else {
+    timerStart = null;
+    timerFinal = null;
   }
 }
 
@@ -770,6 +791,15 @@ function checkAll(){
   updateScore();
 }
 
+/* format a millisecond duration as hh:mm:ss for the Results stopwatch */
+function fmtTime(ms){
+  let s = Math.floor(ms/1000);
+  const h = Math.floor(s/3600); s -= h*3600;
+  const m = Math.floor(s/60);   s -= m*60;
+  const pad = function(n){ return (n<10?"0":"")+n; };
+  return pad(h)+":"+pad(m)+":"+pad(s);
+}
+
 /* percentage uses only filled answers; two progress bars frame it:
    top  = green/grey  -> complete vs incomplete
    bottom = green/red -> correct vs incorrect.
@@ -793,6 +823,11 @@ function updateScore(){
   /* a flawless, fully-answered set re-opens Settings so the next set can be
      configured straight away -- the mirror of generate() folding it shut */
   if(total > 0 && missing === 0 && correct === total){
+    /* stopwatch: stop on the first fully-correct check; the recorded time
+       then stays fixed until the next set is generated */
+    if(timerStart !== null && timerFinal === null){
+      timerFinal = Date.now() - timerStart;
+    }
     S.settingsCollapsed = false;
     saveSettings();
     applyCollapse();
@@ -805,14 +840,29 @@ function updateScore(){
   if(!el) return;
   el.style.display = "block";
   el.classList.toggle("collapsed", S.resultsCollapsed);
+  /* the stopwatch half appears only once the set has been completed
+     correctly (timerFinal recorded); until then the percentage stays
+     centred on its own */
+  let timeHalf = "";
+  if(timerFinal !== null){
+    timeHalf = '<div class="score-half">'
+             +   '<div class="pct">'+fmtTime(timerFinal)+'</div>'
+             +   '<div class="detail">'+tr("time")+'</div>'
+             + '</div>';
+  }
   el.innerHTML =
       '<div class="card-head" onclick="toggleResults()">'
     +   '<span class="card-title">'+tr("results")+'</span>'+CHEV
     + '</div>'
     + '<div class="card-body">'
     +   '<div class="pbar top"><div style="width:'+completePct+'%;background:var(--ok)"></div></div>'
-    +   '<div class="pct">'+pct+'%</div>'
-    +   '<div class="detail">'+detail+'</div>'
+    +   '<div class="score-row">'
+    +     '<div class="score-half">'
+    +       '<div class="pct">'+pct+'%</div>'
+    +       '<div class="detail">'+detail+'</div>'
+    +     '</div>'
+    +     timeHalf
+    +   '</div>'
     +   '<div class="pbar bottom">'
     +     '<div style="width:'+okPct+'%;background:var(--ok)"></div>'
     +     '<div style="width:'+badPct+'%;background:var(--bad)"></div>'
