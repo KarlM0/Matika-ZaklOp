@@ -35,6 +35,8 @@ Just download `Matika-ZaklOp.html` and open it in any web browser. Because it
 is one self-contained file, it can be copied to and run from any device —
 desktop, laptop, tablet or phone — fully offline.
 
+You can also access the file directly in cloud storage [here](https://filedn.eu/lNSOn6bdI52VD4jLq7uA184/HTMLapps/Matika/Matika-ZaklOp.html).
+
 ## Tech notes
 
 - Plain HTML, CSS and JavaScript — no frameworks, no bundler.
