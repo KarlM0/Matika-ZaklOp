@@ -10,6 +10,15 @@ project aims to follow [Semantic Versioning](https://semver.org/).
 > development session; their dates reflect that session rather than separate
 > release dates.
 
+## [1.1.9] - 2026-05-26
+
+### Added
+- A stopwatch in the Results panel. It starts when a set of equations is
+  generated, and stops when that set is checked with the "Check answers"
+  button and every generated equation is answered correctly. The elapsed time
+  is shown as `hh:mm:ss` next to the score percentage. Generating a new set
+  resets it.
+
 ## [1.1.8] - 2026-05-25
 
 ### Changed
