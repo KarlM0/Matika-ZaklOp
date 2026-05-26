@@ -22,7 +22,7 @@ project aims to follow [Semantic Versioning](https://semver.org/).
 ## [1.1.8] - 2026-05-25
 
 ### Changed
-- minor UI changes
+- Minor UI changes
 
 ## [1.1.7] - 2026-05-25
 
