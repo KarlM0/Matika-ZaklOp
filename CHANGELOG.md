@@ -10,6 +10,24 @@ project aims to follow [Semantic Versioning](https://semver.org/).
 > development session; their dates reflect that session rather than separate
 > release dates.
 
+## [1.1.10] - 2026-05-28
+
+### Added
+- **Easter eggs toggle.** Settings now include an "Easter eggs" switch (off by
+  default). When enabled, correct answers on special results show bonus emoji
+  in place of the normal result face. See the v1.1.7 and v1.1.8 entries for
+  the full list of triggers.
+- **Duplicate-expression prevention.** The generator now tracks all rendered
+  expressions in a batch and makes up to four extra attempts per slot to find a
+  distinct one. Batches with a very tight number range may still be shorter than
+  requested, handled by the existing partial-set warning.
+
+### Changed
+- **Commutative operand shuffle.** For addition and multiplication nodes, the
+  generator now randomly swaps left and right subtrees (50/50). This increases
+  surface variety within structurally constrained settings (e.g. +/− only,
+  3 terms, 1 bracket) without affecting mathematical correctness.
+
 ## [1.1.9] - 2026-05-26
 
 ### Added
@@ -21,10 +39,42 @@ project aims to follow [Semantic Versioning](https://semver.org/).
 
 ## [1.1.8] - 2026-05-25
 
+### Added
+- **Gold medal — result 1.** A correct answer of exactly `1` shows 🥇.
+- **Silver medal — result 2.** A correct answer of exactly `2` shows 🥈.
+- **Bronze medal — result 3.** A correct answer of exactly `3` shows 🥉.
+- **Pi.** A correct answer whose rendered value is a left-prefix of π's decimal
+  expansion and has a fractional part (`3.1`, `3.14`, …) shows 📐. A bare
+  integer `3` does not qualify and triggers the bronze-medal egg instead.
+  With the app's two-decimal-place limit only `3.1` and `3.14` are reachable.
+- **Potato — result 4, Czech only.** Shows 🥔 when the interface language is
+  Czech.
+- **Czech lunchtime — result 12, Czech only.** Shows 🚶🌾👩😀🍲🍩 when the
+  interface language is Czech.
+
 ### Changed
-- Minor UI changes
+- Easter egg emoji now **replace** the result face of a correct answer instead
+  of being appended after it. When several eggs match the same result their
+  emoji are concatenated, and that combined string replaces the star-struck
+  face.
 
 ## [1.1.7] - 2026-05-25
+
+### Added
+- **Triple six ("devilish set").** A correct answer whose digits contain three
+  consecutive sixes shows 😈👹🤘🧛. The test runs on the rendered result with
+  the sign and decimal separator stripped, so only the digit characters must be
+  consecutive (e.g. `666`, `66.6`, `−1256.66`).
+- **Lucky thirteen ("lucky charms").** A correct answer of exactly `13` shows
+  🍀🐞.
+- **Answer forty-two ("milky way").** A correct answer of exactly `42` shows 🌌.
+- **Sixty-seven ("fireworks set").** A correct answer of exactly `67` shows
+  🎇🌈🤪.
+
+  > _Reconstruction note:_ these four Easter eggs were confirmed present in
+  > v1.1.7 and absent in v1.1.5, but the exact iteration that introduced each
+  > one was not recorded at the time. They are grouped here as the nearest
+  > known version.
 
 ### Changed
 - Pressing "Check answers" on a set that is fully answered and entirely
