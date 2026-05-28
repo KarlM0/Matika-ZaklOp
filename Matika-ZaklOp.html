@@ -2,7 +2,7 @@
 <!--
   Math Practice — an arithmetic practice app for kids
   ============================================================
-  Version: 1.1.9
+  Version: 1.1.10
   NOTE: bump this version (and the VERSION constant in the
   <script> below) on every new iteration in this conversation.
   ============================================================
@@ -294,6 +294,10 @@
           <div class="txt"><b id="t-show-b">Show correct answers</b><small id="t-show-s">Reveal answers when checking</small></div>
           <label class="switch"><input type="checkbox" id="showCorrect"><span class="track"></span></label>
         </div>
+        <div class="switch-row">
+          <div class="txt"><b id="t-egg-b">Easter eggs</b><small id="t-egg-s">Bonus emoji on special answers</small></div>
+          <label class="switch"><input type="checkbox" id="easterEggs"><span class="track"></span></label>
+        </div>
       </div>
     </div>
   </div>
@@ -311,7 +315,7 @@
 "use strict";
 
 /* === app version ====================================================== */
-const VERSION = "1.1.9";   // bump on every new iteration in this conversation
+const VERSION = "1.1.10";  // bump on every new iteration in this conversation
 
 /* ========================================================================
    STATE & PERSISTENCE
@@ -325,7 +329,7 @@ const defaults = {
   ops:{add:true, sub:true, mul:false, div:false},
   opMin:0, opMax:20, resMin:0, resMax:20,
   count:10, operands:2, brackets:0, dplaces:2,
-  decimals:false, autoBracket:true, showCorrect:false,
+  decimals:false, autoBracket:true, showCorrect:false, easterEggs:false,
   settingsCollapsed:false, resultsCollapsed:true,
   lang:"cs"
 };
@@ -365,7 +369,8 @@ const T = {
     warn:"These settings only allowed {n} of {total} equations. Try widening the number range, allowing more operations, or using fewer terms.",
     warnNone:"These settings can't produce valid equations. Try widening the number range, allowing more operations, or using fewer terms.",
     correct:"correct", missing:"unanswered", noOps:"Select at least one operation.",
-    time:"Time"
+    time:"Time",
+    eggB:"Easter eggs", eggS:"Bonus emoji on special answers"
   },
   cs:{
     title:"Procvi\u010dov\u00e1n\u00ed po\u010d\u00edt\u00e1n\u00ed",
@@ -383,7 +388,8 @@ const T = {
     warn:"Toto nastaven\u00ed umo\u017enilo vytvo\u0159it jen {n} z {total} p\u0159\u00edklad\u016f. Zkus roz\u0161\u00ed\u0159it rozsah \u010d\u00edsel, povolit v\u00edce operac\u00ed nebo zmen\u0161it po\u010det \u010dlen\u016f.",
     warnNone:"S t\u00edmto nastaven\u00edm nelze vytvo\u0159it p\u0159\u00edklady. Zkus roz\u0161\u00ed\u0159it rozsah \u010d\u00edsel, povolit v\u00edce operac\u00ed nebo zmen\u0161it po\u010det \u010dlen\u016f.",
     correct:"spr\u00e1vn\u011b", missing:"nevypln\u011bno", noOps:"Vyber alespo\u0148 jednu operaci.",
-    time:"\u010cas"
+    time:"\u010cas",
+    eggB:"Easter eggs", eggS:"Bonusov\u00e9 emoji u speci\u00e1ln\u00edch v\u00fdsledk\u016f"
   }
 };
 function tr(k){ return (T[S.lang]||T.en)[k]; }
@@ -455,6 +461,7 @@ function isPiEgg(eq){
 }
 
 function eggEmoji(eq){
+  if(!S.easterEggs) return "";
   let extra = "";
   const digits = fmt(eq.answer).replace(/\D/g, "");   /* drop sign + decimal separator */
   if(digits.indexOf("666") !== -1)                 extra += EGG_666;
@@ -581,6 +588,12 @@ function build(leaves, target, ops, opMinT, opMaxT, st){
     if(!L) continue;
     const R = build(kR, tR, ops, opMinT, opMaxT, st);
     if(!R) continue;
+    /* commutative shuffle: for + and *, randomly swap left and right subtrees
+       so that the same number pair can appear in either order, giving more
+       surface variety without changing the mathematical result */
+    if((op === "+" || op === "*") && Math.random() < 0.5){
+      return {leaf:false, op, L:R, R:L};
+    }
     return {leaf:false, op, L, R};
   }
   return null;
@@ -683,6 +696,7 @@ function readInputsToState(){
   S.decimals = document.getElementById("decimals").checked;
   S.autoBracket = document.getElementById("autoBracket").checked;
   S.showCorrect = document.getElementById("showCorrect").checked;
+  S.easterEggs = document.getElementById("easterEggs").checked;
   if(!isFinite(S.opMin)) S.opMin = 0;
   if(!isFinite(S.opMax)) S.opMax = 20;
   if(!isFinite(S.resMin)) S.resMin = 0;
@@ -708,8 +722,16 @@ function generate(){
   const resMinT = Math.round(S.resMin*scale), resMaxT = Math.round(S.resMax*scale);
 
   equations = [];
+  const usedExprs = new Set();
   for(let i=0;i<S.count;i++){
-    const eq = generateOne(S.operands, ops, opMinT, opMaxT, resMinT, resMaxT, S.brackets);
+    /* try up to 4 extra times to find an expression not already in the batch */
+    let eq = null;
+    for(let d=0;d<=4;d++){
+      const candidate = generateOne(S.operands, ops, opMinT, opMaxT, resMinT, resMaxT, S.brackets);
+      if(!candidate) break;
+      const expr = render(candidate.tree, 0, false, null, S.autoBracket);
+      if(!usedExprs.has(expr)){ eq = candidate; usedExprs.add(expr); break; }
+    }
     if(eq) equations.push(eq);
   }
   renderBoard();
@@ -919,7 +941,7 @@ function applyTranslations(){
     "t-oprange":"oprange","t-resrange":"resrange","t-count":"count",
     "t-operands":"operands","t-brackets":"brackets","t-dplaces":"dplaces",
     "t-dec-b":"decB","t-dec-s":"decS","t-auto-b":"autoB","t-auto-s":"autoS",
-    "t-show-b":"showB","t-show-s":"showS","t-empty":"empty",
+    "t-show-b":"showB","t-show-s":"showS","t-egg-b":"eggB","t-egg-s":"eggS","t-empty":"empty",
     "t-min1":"min","t-max1":"max","t-min2":"min","t-max2":"max"
   };
   for(const id in map){ const el=document.getElementById(id); if(el) el.textContent=tr(map[id]); }
@@ -947,6 +969,7 @@ function initInputs(){
   document.getElementById("decimals").checked = S.decimals;
   document.getElementById("autoBracket").checked = S.autoBracket;
   document.getElementById("showCorrect").checked = S.showCorrect;
+  document.getElementById("easterEggs").checked = S.easterEggs;
 
   ["opMin","opMax","resMin","resMax","count","operands","brackets","dplaces"]
     .forEach(function(id){
@@ -960,6 +983,9 @@ function initInputs(){
   });
   document.getElementById("showCorrect").addEventListener("change", function(e){
     S.showCorrect=e.target.checked; saveSettings();
+  });
+  document.getElementById("easterEggs").addEventListener("change", function(e){
+    S.easterEggs=e.target.checked; saveSettings();
   });
 }
 
