@@ -19,6 +19,12 @@ equations for a child to solve, then checks the answers and reports a score.
 - A stopwatch in the Results panel times each set: it starts when the
   equations are generated and stops once the set is checked and every equation
   is correct, showing the elapsed time as `hh:mm:ss` next to the score.
+- **Easter eggs** (optional, off by default). Enable the "Easter eggs" toggle
+  in Settings to reveal hidden bonus emoji on correct answers for special
+  results. Triggers include: answers of 1, 2, 3 (medals), 4 in Czech (🥔),
+  12 in Czech (🚶🌾👩😀🍲🍩), 13 (🍀🐞), 42 (🌌), 67 (🎇🌈🤪), any result
+  whose digits contain three consecutive sixes (😈👹🤘🧛), and decimal results
+  that are a left-prefix of π (📐).
 - The Settings panel is collapsible: it folds away automatically once a set of
   equations is generated, and re-opens when a checked set is fully answered and
   entirely correct — keeping the focus on the equations while practising.
@@ -45,7 +51,7 @@ You can also access the file directly in cloud storage [here](https://filedn.eu/
 
 ## Versioning
 
-Current version: **1.1.9**. See [CHANGELOG.md](CHANGELOG.md) for the full
+Current version: **1.1.10**. See [CHANGELOG.md](CHANGELOG.md) for the full
 history of changes.
 
 ## Known limitation
