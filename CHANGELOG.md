@@ -10,6 +10,15 @@ project aims to follow [Semantic Versioning](https://semver.org/).
 > development session; their dates reflect that session rather than separate
 > release dates.
 
+## [Unreleased]
+
+### Change
+- Easter egg -123 activates only for Czech language.
+- Update the Czech title.
+
+### Add
+- Add indication to the settings that are optional.
+
 ## [1.2.0] - 2026-06-22
 
 ### Added
