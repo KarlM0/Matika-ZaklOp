@@ -26,20 +26,26 @@ equations for a child to solve, then checks the answers and reports a score.
 - A stopwatch in the Results panel times each set: it starts when the
   equations are generated and stops once the set is checked and every equation
   is correct, showing the elapsed time as `hh:mm:ss` next to the score.
-- **Easter eggs** (optional, on by default). Enable the "Easter eggs" toggle
-  in Settings to reveal hidden bonus emoji on correct answers for special
-  results. Triggers include: answers of 1, 2, 3 (medals), 4 in Czech (🥔),
-  8 (🎱), 9 with expression `3 × 3` or `3 + 3 + 3` in Czech (🎺🐻), 12 in
-  Czech (🚶🌾👩😀🍲🍩), 13 (🍀🐞), 42 (🌌), 67 (🎇🌈🤪), 69 (💋), 112 (🆘),
-  150/155/156/158 in Czech (🚒/🚑/🚓/🚔), 365 (🗓), −123 (🕝🎶), any result
-  whose digits contain three consecutive sixes (😈👹🤘🧛), and decimal results
-  that are a left-prefix of π (📐🛞).
 - The Settings panel is collapsible: it folds away automatically once a set of
   equations is generated, and re-opens when a checked set is fully answered and
   entirely correct — keeping the focus on the equations while practising.
 - Bilingual interface — Czech (default) and English. Czech uses a comma as the
   decimal separator.
 - Dark, minimalist design.
+
+### **Easter eggs**
+Optional, on by default. Enable the "Easter eggs" toggle in Settings to reveal 
+hidden bonus emoji on correct answers for special results. 
+Triggers include:
+- Answers of 1, 2, 3 (medals), 4 in Czech (🥔),8 (🎱)
+- 9 with expression `3 × 3` or `3 + 3 + 3` in Czech (🎺🐻)
+- 12 in Czech (🚶🌾👩😀🍲🍩)
+- 13 (🍀🐞), 42 (🌌), 67 (🎇🌈🤪), 69 (💋), 112 (🆘)
+- 150/155/156/158 in Czech (🚒/🚑/🚓/🚔)
+- 365 (🗓), −123 (🕝🎶)
+- Any result whose digits contain three consecutive sixes (😈👹🤘🧛)
+- Decimal results that are a left-prefix of π (📐🛞).
+
 
 ## How to use it
 
