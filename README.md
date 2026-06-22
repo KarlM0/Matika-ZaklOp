@@ -19,7 +19,7 @@ equations for a child to solve, then checks the answers and reports a score.
 - A stopwatch in the Results panel times each set: it starts when the
   equations are generated and stops once the set is checked and every equation
   is correct, showing the elapsed time as `hh:mm:ss` next to the score.
-- **Easter eggs** (optional, off by default). Enable the "Easter eggs" toggle
+- **Easter eggs** (optional). Enable the "Easter eggs" toggle
   in Settings to reveal hidden bonus emoji on correct answers for special
   results. Triggers include: answers of 1, 2, 3 (medals), 4 in Czech (🥔),
   12 in Czech (🚶🌾👩😀🍲🍩), 13 (🍀🐞), 42 (🌌), 67 (🎇🌈🤪), any result
