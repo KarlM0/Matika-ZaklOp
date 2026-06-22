@@ -10,6 +10,60 @@ project aims to follow [Semantic Versioning](https://semver.org/).
 > development session; their dates reflect that session rather than separate
 > release dates.
 
+## [1.2.0] - 2026-06-22
+
+### Added
+- **Focus term.** A second, independent number range that applies to exactly
+  one randomly chosen term per equation. All other terms continue to use the
+  normal number range. Activated implicitly when both Focus term range fields
+  contain valid numbers; leaving either field blank keeps the feature off.
+  Typical use cases: practising multiplication by a specific number (e.g.
+  focus range `[3, 4]`), or drilling division by a fixed divisor (e.g. `[5, 5]`).
+- **GitHub link.** A "View on GitHub" / "Zobrazit na GitHubu" link appears
+  below the version string in the header, styled identically to the version
+  label. Links to `https://github.com/KarlM0/Matika-ZaklOp/`.
+- **New easter eggs** (all require the Easter eggs toggle to be on):
+  - Result **−123** → 🕝🎶
+  - Result **8** → 🎱
+  - Result **69** → 💋
+  - Result **112** → 🆘
+  - Result **150**, Czech only → 🚒
+  - Result **155**, Czech only → 🚑
+  - Result **156**, Czech only → 🚓
+  - Result **158**, Czech only → 🚔
+  - Result **365** → 🗓
+  - Result **9** with expression exactly `3 × 3` or `3 + 3 + 3`, Czech only → 🎺🐻
+- **Negative result ranges.** The Result range minimum field now accepts
+  negative values, making results such as −123 reachable.
+
+### Changed
+- **Easter eggs default on.** The Easter eggs toggle now defaults to enabled
+  for new users.
+- **Decimal places replaces decimals toggle.** The "Include decimals" toggle
+  is removed. Decimal places set to `0` means whole numbers only; `1` or `2`
+  activates decimal operands and results. The Decimal places field dims at `0`
+  to signal it is inactive. Default changed from `2` to `0`.
+- **Focus term replaces focus toggle.** The "Focus term" toggle is removed.
+  Focus is inferred directly from the range fields: both fields filled =
+  active, either blank = inactive. The focus range field dims when inactive.
+  Focus range defaults to blank (off).
+- **"(optional)" moved into field labels.** The hint previously appeared as a
+  separate line below the label; it now appears inline as a smaller, dimmer
+  suffix inside the label element, preserving grid alignment.
+- **Settings field order** (left → right, top → bottom): Number range, Focus
+  term range, Number of terms, Result range, Bracket groups, Decimal places,
+  Number of equations; followed by toggle rows: Auto-bracket, Show correct
+  answers, Easter eggs.
+- **Pi easter egg updated.** Correct answers that are a left-prefix of π now
+  show 📐🛞 instead of 📐 alone (U+1F6DE added).
+- **Egg #10 first emoji changed** from 🪨 (rock) to 🎺 (trumpet, U+1F3BA).
+- **Duplicate-expression prevention** (carried from v1.1.10): the generator
+  makes up to four extra attempts per slot to avoid repeating an expression
+  already in the current batch.
+- **Commutative operand shuffle** (carried from v1.1.10): addition and
+  multiplication nodes randomly swap their left and right subtrees (50/50) for
+  greater surface variety.
+
 ## [1.1.10] - 2026-05-28
 
 ### Added

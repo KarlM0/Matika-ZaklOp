@@ -1,6 +1,6 @@
 # Math Practice
 
-*Základní operace (ZáklOp)* — a browser-based arithmetic practice app for children.
+*Procvičování počítání* — a browser-based arithmetic practice app for children.
 
 It generates sets of addition, subtraction, multiplication and division
 equations for a child to solve, then checks the answers and reports a score.
@@ -10,7 +10,14 @@ equations for a child to solve, then checks the answers and reports a score.
 - Choose which operations to practise: `+`, `−`, `×`, `÷`.
 - Configurable number range, result range, number of equations, terms per
   equation, and bracket groups.
-- Optional decimal numbers with a selectable number of decimal places.
+- **Focus term** (optional). A second number range that applies to exactly one
+  randomly chosen term per equation; all other terms use the normal range.
+  Useful for drilling multiplication by a specific number (e.g. `[3, 4]`) or
+  division by a fixed divisor (e.g. `[5, 5]`). Activated by filling in both
+  Focus term range fields; leaving either blank keeps it off.
+- Optional decimal numbers (1 or 2 decimal places). Setting Decimal places to
+  `0` uses whole numbers only.
+- Negative result ranges supported — set the Result range minimum below zero.
 - **Target-driven generator** — the answer is picked first and decomposed into
   an expression tree, guaranteeing in-range results, exact division,
   non-negative subtraction, and standard operator precedence.
@@ -19,12 +26,14 @@ equations for a child to solve, then checks the answers and reports a score.
 - A stopwatch in the Results panel times each set: it starts when the
   equations are generated and stops once the set is checked and every equation
   is correct, showing the elapsed time as `hh:mm:ss` next to the score.
-- **Easter eggs** (optional). Enable the "Easter eggs" toggle
+- **Easter eggs** (optional, on by default). Enable the "Easter eggs" toggle
   in Settings to reveal hidden bonus emoji on correct answers for special
   results. Triggers include: answers of 1, 2, 3 (medals), 4 in Czech (🥔),
-  12 in Czech (🚶🌾👩😀🍲🍩), 13 (🍀🐞), 42 (🌌), 67 (🎇🌈🤪), any result
+  8 (🎱), 9 with expression `3 × 3` or `3 + 3 + 3` in Czech (🎺🐻), 12 in
+  Czech (🚶🌾👩😀🍲🍩), 13 (🍀🐞), 42 (🌌), 67 (🎇🌈🤪), 69 (💋), 112 (🆘),
+  150/155/156/158 in Czech (🚒/🚑/🚓/🚔), 365 (🗓), −123 (🕝🎶), any result
   whose digits contain three consecutive sixes (😈👹🤘🧛), and decimal results
-  that are a left-prefix of π (📐).
+  that are a left-prefix of π (📐🛞).
 - The Settings panel is collapsible: it folds away automatically once a set of
   equations is generated, and re-opens when a checked set is fully answered and
   entirely correct — keeping the focus on the equations while practising.
@@ -51,7 +60,7 @@ You can also access the file directly in cloud storage [here](https://filedn.eu/
 
 ## Versioning
 
-Current version: **1.1.10**. See [CHANGELOG.md](CHANGELOG.md) for the full
+Current version: **1.2.0**. See [CHANGELOG.md](CHANGELOG.md) for the full
 history of changes.
 
 ## Known limitation
