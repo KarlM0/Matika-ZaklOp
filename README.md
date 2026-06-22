@@ -1,6 +1,6 @@
 # Math Practice
 
-*Procvičování počítání* — a browser-based arithmetic practice app for children.
+*Základní operace (ZáklOp)* — a browser-based arithmetic practice app for children.
 
 It generates sets of addition, subtraction, multiplication and division
 equations for a child to solve, then checks the answers and reports a score.
