@@ -147,11 +147,9 @@ history of changes.
 - A `file:///…` link only works on the device holding that file. To share a
   set with someone else, generate the link from the hosted copy.
   
----
-
 ## License
 
-Matika-Zalkop is licensed under
+Matika-Zaklop is licensed under
 [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 
 **You may** download, use, and share the app and this documentation
