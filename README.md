@@ -146,3 +146,23 @@ history of changes.
   the link in a selected field with a prompt to copy it manually.
 - A `file:///…` link only works on the device holding that file. To share a
   set with someone else, generate the link from the hosted copy.
+  
+---
+
+## License
+
+Matika-Zalkop is licensed under
+[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+
+**You may** download, use, and share the app and this documentation
+unmodified — including in schools, libraries, and other non-commercial
+settings — as long as you credit the source
+(https://github.com/KarlM0/Matika-Zaklop/).
+
+**You may not** modify the app or share modified versions, or use them
+for any commercial purpose.
+
+The web fonts (Fraunces, Manrope, JetBrains Mono) are licensed separately
+by their authors under the SIL Open Font License and Apache 2.0.
+
+Copyright © 2026 KarlM0. All rights not expressly granted are reserved.
