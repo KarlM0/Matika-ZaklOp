@@ -2,7 +2,7 @@
 <!--
   Math Practice — an arithmetic practice app for kids
   ============================================================
-  Version: 1.2.0
+  Version: 1.3.0
   NOTE: bump this version (and the VERSION constant in the
   <script> below) on every new iteration in this conversation.
   ============================================================
@@ -199,6 +199,31 @@
   /* ---------- focus range field: dims when inactive ---------- */
   .focus-range-field.disabled-look{opacity:.4;}
 
+  /* ---------- share panel ----------
+     NOVEL ELEMENTS (candidates for DESIGN.md):
+       .share-url  — read-only, monospaced URL display field. Derived from the
+                     Part 2 "Inputs and selects" spec, with --text-dim text at
+                     12px because it shows a long machine-generated string
+                     rather than an editable value.
+       .btn-ghost.copied — transient confirmation state for a ghost button. It
+                     simply pins the existing ghost hover appearance
+                     (--accent border + text) for ~1.6s, so no new token or
+                     colour is introduced.
+     ------------------------------------------------------------------- */
+  .share{margin-top:20px;}
+  .share > .card-title{display:block;margin-bottom:2px;}
+  .share .btn{margin-top:4px;}
+  .btn-ghost.copied{border-color:var(--accent);color:var(--accent);}
+  #share-out{margin-top:10px;}
+  .share-url{
+    width:100%;background:var(--surface-2);border:1px solid var(--border);
+    color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:12px;
+    padding:9px 11px;border-radius:var(--radius-sm);transition:.16s;
+  }
+  .share-url:focus{outline:none;border-color:var(--accent);}
+  .share-hint{font-size:11.5px;color:var(--text-faint);margin-top:7px;}
+  .share-hint:empty{display:none;}
+
   /* ---------- results card & progress bars ---------- */
   .score{margin-top:14px;}
   .score .card-body{text-align:center;}
@@ -328,6 +353,20 @@
           <label class="switch"><input type="checkbox" id="easterEggs"><span class="track"></span></label>
         </div>
       </div>
+
+      <!-- ---- share link ---- -->
+      <div class="share">
+        <span class="card-title" id="t-share">Share settings</span>
+        <div class="switch-row">
+          <div class="txt"><b id="t-go-b">Link starts practice</b><small id="t-go-s">Generate equations as soon as the link opens</small></div>
+          <label class="switch"><input type="checkbox" id="shareGo"><span class="track"></span></label>
+        </div>
+        <button class="btn btn-ghost" id="btn-share" onclick="onShareClick()">Copy link</button>
+        <div id="share-out" style="display:none">
+          <input type="text" class="share-url" id="share-url" readonly spellcheck="false">
+          <div class="share-hint" id="share-hint"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -344,7 +383,7 @@
 "use strict";
 
 /* === app version ====================================================== */
-const VERSION = "1.2.0";
+const VERSION = "1.3.0";
 
 /* ========================================================================
    STATE & PERSISTENCE
@@ -359,9 +398,78 @@ const defaults = {
   focusMin:null, focusMax:null,
   autoBracket:true, showCorrect:false, easterEggs:true,
   settingsCollapsed:false, resultsCollapsed:true,
+  /* shareGo: whether a generated share link carries go=1. A property of the
+     link being written, not of the practice itself, so it is never emitted
+     as a URL parameter. */
+  shareGo:false,
   lang:"cs"
 };
 let S = Object.assign({}, defaults, {ops:Object.assign({}, defaults.ops)});
+
+/* ------------------------------------------------------------------------
+   SANITISATION
+   One shared validator for every path that can write into S: stored
+   settings, URL parameters, and the settings form. Keeping it in one place
+   means a value can never enter the app unclamped, whichever door it used.
+
+   RANGE_LIMIT bounds the numeric range fields. This is a safety limit, not a
+   pedagogical one: the generator does work proportional to opMax × scale, so
+   an unbounded value (a typo, or a mangled link) could otherwise freeze the
+   tab before the step budget had a chance to bail out.
+   ------------------------------------------------------------------------ */
+const RANGE_LIMIT = 10000;
+const RANGE_KEYS = ["opMin","opMax","resMin","resMax"];
+const BOOL_KEYS  = ["autoBracket","showCorrect","easterEggs","shareGo",
+                    "settingsCollapsed","resultsCollapsed"];
+/* select-backed values may only ever be one of the listed options */
+const OPTION_LISTS = {
+  count:[5,10,15,20,30],
+  operands:[2,3,4,5,6,7,8],
+  brackets:[0,1,2,3],
+  dplaces:[0,1,2]
+};
+
+function snapTo(v,list,fallback){
+  const n=parseInt(v,10);
+  if(!isFinite(n)) return fallback;
+  let best=list[0], bd=Math.abs(n-list[0]);
+  for(let i=1;i<list.length;i++){
+    const d=Math.abs(n-list[i]);
+    if(d<bd){bd=d;best=list[i];}
+  }
+  return best;
+}
+/* focus bounds are nullable and may be fractional: "" or unparseable → null */
+function cleanFocus(v){
+  if(v===null||v===undefined||v==="") return null;
+  const n=parseFloat(String(v).replace(",","."));
+  if(!isFinite(n)) return null;
+  return Math.max(-RANGE_LIMIT,Math.min(RANGE_LIMIT,n));
+}
+
+function sanitizeSettings(s){
+  if(!s.ops||typeof s.ops!=="object") s.ops={};
+  ["add","sub","mul","div"].forEach(function(k){s.ops[k]=!!s.ops[k];});
+
+  RANGE_KEYS.forEach(function(k){
+    let v=parseInt(s[k],10);
+    if(!isFinite(v)) v=defaults[k];
+    s[k]=Math.max(-RANGE_LIMIT,Math.min(RANGE_LIMIT,v));
+  });
+  if(s.opMax <s.opMin ) s.opMax =s.opMin;
+  if(s.resMax<s.resMin) s.resMax=s.resMin;
+
+  /* a lone focus bound is left as typed — the user may still be filling in
+     the other one — so only order is corrected, never presence */
+  s.focusMin=cleanFocus(s.focusMin);
+  s.focusMax=cleanFocus(s.focusMax);
+  if(s.focusMin!==null&&s.focusMax!==null&&s.focusMax<s.focusMin) s.focusMax=s.focusMin;
+
+  for(const k in OPTION_LISTS){ s[k]=snapTo(s[k],OPTION_LISTS[k],defaults[k]); }
+  BOOL_KEYS.forEach(function(k){ s[k]=!!s[k]; });
+  if(s.lang!=="cs"&&s.lang!=="en") s.lang=defaults.lang;
+  return s;
+}
 
 function loadSettings(){
   try{
@@ -371,10 +479,12 @@ function loadSettings(){
       S = Object.assign({}, defaults, p, {ops:Object.assign({}, defaults.ops, p.ops||{})});
     }
   }catch(e){}
+  sanitizeSettings(S);
 }
 function saveSettings(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }
   catch(e){}
+  refreshShareLink();   /* no-op while the link field is hidden */
 }
 
 /* ========================================================================
@@ -387,6 +497,104 @@ function decimalsActive(){ return S.dplaces > 0; }
 function focusActive(){
   return S.focusMin !== null && S.focusMax !== null &&
          isFinite(S.focusMin) && isFinite(S.focusMax);
+}
+
+/* ========================================================================
+   LAUNCH PARAMETERS
+   The app can be opened with settings supplied in the URL, e.g.
+     Matika-ZaklOp.html#lang=cs&ops=mul&opmax=10&focusmin=3&focusmax=4&go=1
+
+   Hash and query string are parsed by the same code, hash first; the hash is
+   also the form the share-link generator emits. A hash survives every
+   browser and every file:// launcher and is never sent to a host, which
+   matters because the app runs both as a local file and from cloud storage.
+
+   Parameters are merged ON TOP of what the visitor already has (defaults,
+   then localStorage), so a partial link overrides only what it names, and
+   unknown keys are ignored — links written by another version stay usable in
+   both directions.
+
+   Focus bounds are nullable, so they are emitted as focusmin=&focusmax= when
+   focus is off; an empty or unparseable value reads back as null.
+   ======================================================================== */
+const URL_NUMS = {
+  opmin:"opMin", opmax:"opMax", resmin:"resMin", resmax:"resMax",
+  count:"count", operands:"operands", brackets:"brackets", dplaces:"dplaces"
+};
+const URL_FOCUS = { focusmin:"focusMin", focusmax:"focusMax" };
+const URL_BOOLS = {
+  autobracket:"autoBracket", showcorrect:"showCorrect", eggs:"easterEggs"
+};
+const URL_OTHER = ["lang","ops","go"];
+
+let autoGo = false;   /* runtime only: set by go=1, never persisted */
+
+function urlBool(v){ return /^(1|true|yes|on)$/i.test(String(v).trim()); }
+
+function parseParamSource(raw){
+  if(!raw) return null;
+  const map={};
+  try{
+    new URLSearchParams(raw).forEach(function(v,k){ map[k.toLowerCase()]=v; });
+  }catch(e){ return null; }
+  let known=false;
+  for(const k in URL_NUMS)  if(k in map) known=true;
+  for(const k in URL_FOCUS) if(k in map) known=true;
+  for(const k in URL_BOOLS) if(k in map) known=true;
+  URL_OTHER.forEach(function(k){ if(k in map) known=true; });
+  return known ? map : null;
+}
+
+function applyUrlParams(){
+  const q = parseParamSource(location.hash.slice(1))
+         || parseParamSource(location.search.slice(1));
+  if(!q) return false;
+
+  for(const key in URL_NUMS){
+    if(key in q){
+      const n=parseInt(q[key],10);
+      if(isFinite(n)) S[URL_NUMS[key]]=n;
+    }
+  }
+  /* focus: present-but-empty is meaningful (= off), so assign unconditionally
+     when the key appears and let cleanFocus decide */
+  for(const key in URL_FOCUS){
+    if(key in q) S[URL_FOCUS[key]]=cleanFocus(q[key]);
+  }
+  for(const key in URL_BOOLS){
+    if(key in q) S[URL_BOOLS[key]]=urlBool(q[key]);
+  }
+  if("ops" in q){
+    const list=q.ops.toLowerCase().split(",").map(function(x){return x.trim();});
+    ["add","sub","mul","div"].forEach(function(k){ S.ops[k]=list.indexOf(k)!==-1; });
+  }
+  if("lang" in q && /^(cs|en)$/i.test(q.lang)) S.lang=q.lang.toLowerCase();
+  if("go" in q) autoGo=urlBool(q.go);
+
+  sanitizeSettings(S);
+  /* opening a link makes its settings the visitor's new local default */
+  saveSettings();
+  return true;
+}
+
+/* Build a full link from the CURRENT state. Every setting is emitted, not
+   only those differing from the defaults: a diff-only link would be completed
+   from the recipient's own stored settings and so could produce a different
+   set of equations for each child. */
+function buildShareUrl(){
+  const on=Object.keys(S.ops).filter(function(k){return S.ops[k];}).join(",");
+  const p=new URLSearchParams();
+  p.set("lang",S.lang);
+  p.set("ops",on);
+  for(const key in URL_NUMS)  p.set(key,String(S[URL_NUMS[key]]));
+  for(const key in URL_FOCUS){
+    const v=S[URL_FOCUS[key]];
+    p.set(key, v===null ? "" : String(v));   /* focusmin=&focusmax= when off */
+  }
+  for(const key in URL_BOOLS) p.set(key, S[URL_BOOLS[key]] ? "1" : "0");
+  if(S.shareGo) p.set("go","1");
+  const base=location.href.split("#")[0].split("?")[0];
+  return base+"#"+p.toString();
 }
 
 /* ========================================================================
@@ -412,7 +620,11 @@ const T = {
     correct:"correct", missing:"unanswered", noOps:"Select at least one operation.",
     time:"Time",
     eggB:"Easter eggs", eggS:"Bonus emoji on special answers",
-    github:"View on GitHub"
+    github:"View on GitHub",
+    share:"Share settings",
+    goB:"Link starts practice", goS:"Generate equations as soon as the link opens",
+    copy:"Copy link", copied:"Copied",
+    copyManual:"Copying was blocked \u2014 select the link and copy it manually."
   },
   cs:{
     title:"Procvi\u010dov\u00e1n\u00ed po\u010d\u00edt\u00e1n\u00ed",
@@ -433,7 +645,11 @@ const T = {
     correct:"spr\u00e1vn\u011b", missing:"nevypln\u011bno", noOps:"Vyber alespo\u0148 jednu operaci.",
     time:"\u010cas",
     eggB:"Easter eggs", eggS:"Bonusov\u00e9 emoji u speci\u00e1ln\u00edch v\u00fdsledk\u016f",
-    github:"Zobrazit na GitHubu"
+    github:"Zobrazit na GitHubu",
+    share:"Sd\u00edlen\u00ed nastaven\u00ed",
+    goB:"Odkaz rovnou spust\u00ed p\u0159\u00edklady", goS:"Po otev\u0159en\u00ed odkazu se hned vytvo\u0159\u00ed sada",
+    copy:"Kop\u00edrovat odkaz", copied:"Zkop\u00edrov\u00e1no",
+    copyManual:"Kop\u00edrov\u00e1n\u00ed bylo zablokov\u00e1no \u2014 ozna\u010d odkaz a zkop\u00edruj ho ru\u010dn\u011b."
   }
 };
 function tr(k){ return (T[S.lang]||T.en)[k]; }
@@ -545,6 +761,15 @@ function shuffle(a){
 const NODE_TRIES = 18;
 const STEP_BUDGET = 35000;
 
+/* Work caps. The step budget bounds the number of recursive calls but not the
+   work inside a single attempt, so the two enumerating branches (factor search
+   for ×, divisor search for ÷) are capped independently. With everyday ranges
+   these are never reached and generation is unchanged; they only bite on very
+   large ranges, trading a little variety for a responsive tab. */
+const MUL_SCAN_CAP = 4000;      /* trial divisors scanned when factorising */
+const MUL_PAIR_CAP = 400;       /* factor pairs collected                  */
+const DIV_CANDIDATE_CAP = 2000; /* divisor candidates tried                */
+
 function build(leaves, target, ops, opMinT, opMaxT, st,
                focusLeafIdx, focusMinT, focusMaxT, leafCounter){
   if(++st.steps>STEP_BUDGET) return null;
@@ -588,8 +813,11 @@ function build(leaves, target, ops, opMinT, opMaxT, st,
         if(tL===null||tR===null) continue;
       } else {
         const pairs=[];
-        const lim=Math.floor(Math.sqrt(M));
-        for(let d=1;d<=lim;d++){if(M%d===0){pairs.push([d,M/d]);pairs.push([M/d,d]);}}
+        const lim=Math.min(Math.floor(Math.sqrt(M)),MUL_SCAN_CAP);
+        for(let d=1;d<=lim;d++){
+          if(M%d===0){pairs.push([d,M/d]);pairs.push([M/d,d]);}
+          if(pairs.length>=MUL_PAIR_CAP) break;
+        }
         shuffle(pairs);
         let picked=null;
         for(let p=0;p<pairs.length;p++){
@@ -606,9 +834,17 @@ function build(leaves, target, ops, opMinT, opMaxT, st,
       const loR=leafR?Math.max(1,opMinT):1;
       const hiR=opMaxT;
       let found=false;
+      const span=hiR-loR+1;
+      if(span<=0) continue;
+      /* enumerate and shuffle when the span is small, otherwise sample it, so
+         the array can never grow without bound */
       const range=[];
-      for(let r=loR;r<=hiR;r++) range.push(r);
-      shuffle(range);
+      if(span<=DIV_CANDIDATE_CAP){
+        for(let r=loR;r<=hiR;r++) range.push(r);
+        shuffle(range);
+      } else {
+        for(let k=0;k<DIV_CANDIDATE_CAP;k++) range.push(randInt(loR,hiR));
+      }
       for(let q=0;q<range.length;q++){
         const r=range[q];
         const num=target*r;
@@ -731,15 +967,25 @@ function readInputsToState(){
   S.autoBracket=document.getElementById("autoBracket").checked;
   S.showCorrect=document.getElementById("showCorrect").checked;
   S.easterEggs=document.getElementById("easterEggs").checked;
+  S.shareGo=document.getElementById("shareGo").checked;
   parseFocusFields();
-  if(!isFinite(S.opMin))  S.opMin=0;
-  if(!isFinite(S.opMax))  S.opMax=20;
-  if(!isFinite(S.resMin)) S.resMin=0;
-  if(!isFinite(S.resMax)) S.resMax=20;
-  if(S.opMax<S.opMin)   S.opMax=S.opMin;
-  if(S.resMax<S.resMin) S.resMax=S.resMin;
-  if(focusActive() && S.focusMax<S.focusMin) S.focusMax=S.focusMin;
+  sanitizeSettings(S);
+  reflectNumberInputs();
   saveSettings();
+}
+
+/* Write sanitised values back into the form, so a clamped or reordered value
+   is visible rather than silently different from what the input still shows */
+function reflectNumberInputs(){
+  RANGE_KEYS.forEach(function(k){
+    const e=document.getElementById(k);
+    if(e && String(S[k])!==e.value) e.value=S[k];
+  });
+  ["focusMin","focusMax"].forEach(function(k){
+    const e=document.getElementById(k);
+    const want=(S[k]===null)?"":String(S[k]);
+    if(e && e.value!==want) e.value=want;
+  });
 }
 
 function generate(){
@@ -903,6 +1149,70 @@ function updateScore(){
 }
 
 /* ========================================================================
+   SHARE LINK UI
+   The link is built on request, not eagerly: the field stays hidden until
+   "Copy link" is pressed. Once it is on screen it must never go stale — a
+   displayed URL that no longer matches the form would be worse than none —
+   so saveSettings() refreshes it, and every settings mutation already
+   funnels through saveSettings().
+   ======================================================================== */
+let copiedTimer=null;
+
+function shareFieldVisible(){
+  const out=document.getElementById("share-out");
+  return !!out && out.style.display!=="none";
+}
+function refreshShareLink(){
+  if(!shareFieldVisible()) return;
+  const f=document.getElementById("share-url");
+  if(f) f.value=buildShareUrl();
+}
+function flashCopied(){
+  const b=document.getElementById("btn-share");
+  if(!b) return;
+  b.textContent=tr("copied");
+  b.classList.add("copied");
+  if(copiedTimer) clearTimeout(copiedTimer);
+  copiedTimer=setTimeout(function(){
+    copiedTimer=null;
+    b.classList.remove("copied");
+    b.textContent=tr("copy");
+  },1600);
+}
+function legacyCopy(field,hint){
+  let ok=false;
+  try{ ok=document.execCommand("copy"); }catch(e){ ok=false; }
+  if(ok) flashCopied();
+  else if(hint) hint.textContent=tr("copyManual");
+}
+function onShareClick(){
+  /* a number typed but not yet blurred has not fired "change", so pull the
+     form into state (and clamp it) before building the link */
+  readInputsToState();
+
+  const out =document.getElementById("share-out");
+  const f   =document.getElementById("share-url");
+  const hint=document.getElementById("share-hint");
+  out.style.display="block";
+  hint.textContent="";
+  f.value=buildShareUrl();
+
+  /* select first: the field is the fallback when the clipboard is
+     unavailable, and execCommand needs the selection anyway */
+  f.focus();
+  try{ f.setSelectionRange(0,f.value.length); }catch(e){ f.select(); }
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(f.value).then(
+      function(){ flashCopied(); },
+      function(){ legacyCopy(f,hint); }
+    );
+  } else {
+    legacyCopy(f,hint);
+  }
+}
+
+/* ========================================================================
    UI WIRING
    ======================================================================== */
 const OP_DEFS=[
@@ -963,6 +1273,7 @@ function applyTranslations(){
     "t-auto-b":"autoB","t-auto-s":"autoS",
     "t-show-b":"showB","t-show-s":"showS",
     "t-egg-b":"eggB","t-egg-s":"eggS","t-empty":"empty",
+    "t-share":"share","t-go-b":"goB","t-go-s":"goS",
     "t-min1":"min","t-max1":"max","t-min2":"min","t-max2":"max","t-min3":"min","t-max3":"max"
   };
   for(const id in map){const el=document.getElementById(id);if(el) el.textContent=tr(map[id]);}
@@ -972,6 +1283,10 @@ function applyTranslations(){
   });
   document.title=tr("title");
   document.getElementById("btn-gen").textContent=tr("gen");
+  /* leave a live "Copied" confirmation alone; its own timer restores it */
+  if(!copiedTimer) document.getElementById("btn-share").textContent=tr("copy");
+  const hintEl=document.getElementById("share-hint");
+  if(hintEl && hintEl.textContent) hintEl.textContent=tr("copyManual");
   const ghEl=document.getElementById("t-gh");
   if(ghEl) ghEl.textContent=tr("github");
   document.documentElement.lang=S.lang;
@@ -1001,6 +1316,7 @@ function initInputs(){
   document.getElementById("autoBracket").checked=S.autoBracket;
   document.getElementById("showCorrect").checked=S.showCorrect;
   document.getElementById("easterEggs").checked=S.easterEggs;
+  document.getElementById("shareGo").checked=S.shareGo;
 
   /* change listeners for plain number/select fields */
   ["opMin","opMax","resMin","resMax","count","operands","brackets"]
@@ -1038,16 +1354,23 @@ function initInputs(){
   document.getElementById("easterEggs").addEventListener("change",function(e){
     S.easterEggs=e.target.checked;saveSettings();
   });
+  document.getElementById("shareGo").addEventListener("change",function(e){
+    S.shareGo=e.target.checked;saveSettings();
+  });
 }
 
-/* ---- boot ---- */
+/* ---- boot ----
+   defaults → localStorage → URL parameters → form, then optionally generate
+   straight away if the link asked for it (go=1) */
 loadSettings();
+applyUrlParams();
 initInputs();
 applyTranslations();
 syncDecimalUI();
 syncFocusUI();
 applyCollapse();
 (function(){const v=document.getElementById("ver");if(v) v.textContent="v"+VERSION;})();
+if(autoGo) generate();
 </script>
 </body>
 </html>
