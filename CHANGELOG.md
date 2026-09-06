@@ -19,6 +19,88 @@ project aims to follow [Semantic Versioning](https://semver.org/).
 ### Add
 - Add indication to the settings that are optional.
 
+## [1.3.0] - 2026-09-06
+
+### Added
+- **Launch parameters.** The app can be opened with settings supplied in the
+  URL, so a set can be prepared once and handed over as a link:
+
+  ```
+  Matika-ZaklOp.html#lang=cs&ops=mul&opmax=10&focusmin=3&focusmax=4&go=1
+  ```
+
+  Both the hash fragment and the query string are accepted and parsed by the
+  same code; the hash is read first. Parameter names are matched
+  case-insensitively and unknown keys are ignored, so links written by an
+  older or newer version stay usable in both directions.
+
+  Values are merged on top of whatever the visitor already has (defaults,
+  then `localStorage`), so a partial link overrides only what it names.
+  Opening a link makes its settings the visitor's new local default.
+
+  Recognised parameters: `lang`, `ops`, `opmin`, `opmax`, `resmin`, `resmax`,
+  `focusmin`, `focusmax`, `count`, `operands`, `brackets`, `dplaces`,
+  `autobracket`, `showcorrect`, `eggs`, `go`. Booleans accept
+  `1`/`0`/`true`/`false`/`yes`/`no`. `ops` is a comma-separated list drawn
+  from `add`, `sub`, `mul`, `div`; the operations it lists are switched on and
+  all others off.
+- **Focus term in links.** Because the focus bounds are nullable, they are
+  emitted as `focusmin=&focusmax=` when the feature is off, and an empty or
+  unparseable value reads back as blank. A link that carries both keys
+  therefore sets focus deterministically — including switching it off — while
+  a link that omits them leaves the recipient's own focus setting untouched.
+- **`go=1` parameter.** When present, the app generates a set as soon as the
+  link opens, arriving straight at the equations with Settings folded away.
+- **Share-link generator.** A "Share settings" block at the bottom of the
+  Settings card builds a link from the values currently in the form and the
+  selected language, and copies it to the clipboard. The link is emitted in
+  hash form. All values are included, not only those differing from the
+  defaults, so the same link produces the same set for every recipient
+  regardless of their stored settings.
+
+  The link field stays hidden until the button is pressed; once visible it
+  refreshes on every settings change, so a displayed link can never fall out
+  of step with the form. Pressing the button also commits any value typed but
+  not yet blurred, so the link matches what is on screen.
+
+  Copying falls back in three tiers: the asynchronous clipboard API, then
+  `document.execCommand`, then a message asking for a manual copy with the
+  link left selected in a visible field.
+- **"Link starts practice" toggle.** Sits in the share block and controls
+  whether the generated link carries `go=1`. It is a property of the link
+  being written rather than of the practice itself, so it is never emitted as
+  a parameter of its own.
+
+### Changed
+- **Single settings validator.** Stored settings, URL parameters and the
+  settings form now all pass through one `sanitizeSettings()` function.
+  Previously the clamping lived only in the form-reading path, so no other
+  entry point was checked at all.
+- **Range fields clamped to ±10000.** This is a safety limit rather than a
+  pedagogical one: the generator does work proportional to the number range,
+  so an unbounded value — a typo, or a mangled link — could freeze the tab.
+  The bound applies to the number range, the result range and the focus term
+  range.
+- **Select-backed values snapped to their option lists.** `count`,
+  `operands`, `brackets` and `dplaces` are moved to the nearest permitted
+  option instead of being range-checked. Assigning a value that is not in a
+  `<select>` leaves the control displaying its previous value while the state
+  holds the new one, so the interface would otherwise misreport what is being
+  generated.
+- **Corrected values written back into the form.** When a range value is
+  clamped, or a maximum below its minimum is raised to match, the input now
+  shows the corrected figure. Previously the correction happened in state
+  only and the field kept displaying the original number.
+- **Generator work caps.** The step budget bounds the number of recursive
+  calls but not the work inside a single attempt, so the two enumerating
+  branches are now capped independently: the factor search for `×` scans at
+  most 4000 trial divisors and collects at most 400 pairs, and the divisor
+  search for `÷` tries at most 2000 candidates, sampling the range at random
+  rather than enumerating it when it is larger than that. With everyday
+  ranges these limits are never reached and generation is unchanged; they
+  only take effect on very large ranges, trading a little variety for a
+  responsive tab. The engine remains target-driven.
+
 ## [1.2.0] - 2026-06-22
 
 ### Added
